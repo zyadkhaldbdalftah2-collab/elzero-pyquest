@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --python-blue: #3776AB;
+  --python-yellow: #FFD43B;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #0f172a;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+body {
+  @apply bg-slate-950 text-slate-200 font-inter;
+}
+
+/* Code blocks always LTR */
+pre, code, .code-block {
+  direction: ltr !important;
+  text-align: left !important;
+  font-family: 'Fira Code', monospace !important;
+}
+
+/* Arabic text styling */
+.rtl-text {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Cairo', sans-serif;
+}
+
+/* Card hover effect */
+.card-hover {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.card-hover:hover {
+  @apply border-python-blue/50 shadow-lg shadow-python-blue/10;
+  transform: translateY(-2px);
+}
+
+/* Confetti z-index */
+canvas.confetti-canvas {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Game chip styling */
+.game-chip {
+  @apply px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 cursor-pointer
+         transition-all duration-200 text-sm font-fira;
+}
+
+.game-chip:hover {
+  @apply border-python-blue bg-slate-700;
+}
+
+.game-chip.selected {
+  @apply border-python-yellow bg-python-yellow/10 text-python-yellow;
+}
+
+.game-chip.correct {
+  @apply border-green-500 bg-green-500/10 text-green-400;
+}
+
+.game-chip.incorrect {
+  @apply border-red-500 bg-red-500/10 text-red-400;
+}
+
+/* Flashcard flip */
+.flashcard {
+  perspective: 1000px;
+}
+
+.flashcard-inner {
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.flashcard.flipped .flashcard-inner {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front,
+.flashcard-back {
+  backface-visibility: hidden;
+}
+
+.flashcard-back {
+  transform: rotateY(180deg);
+}
+
+/* Draggable line styling */
+.drag-line {
+  @apply p-2 rounded border border-slate-700 bg-slate-800/80 font-fira text-sm cursor-grab;
+}
+
+.drag-line:active {
+  @apply cursor-grabbing border-python-blue;
+}
+
+/* Pulse animation for XP gain */
+@keyframes xpPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.xp-pulse {
+  animation: xpPulse 0.5s ease-in-out;
+}
+
+/* Glow effect */
+.glow-blue {
+  box-shadow: 0 0 20px rgba(55, 118, 171, 0.3);
+}
+
+.glow-yellow {
+  box-shadow: 0 0 20px rgba(255, 212, 59, 0.3);
+}
