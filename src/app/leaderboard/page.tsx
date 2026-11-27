@@ -30,6 +30,10 @@ export default function LeaderboardPage() {
   const [activeSort, setActiveSort] = useState<"xp" | "streak" | "lessons">("xp");
 
   useEffect(() => {
+    document.title = "Global Leaderboard | PyVerse Academy";
+  }, []);
+
+  useEffect(() => {
     async function loadData() {
       setLoading(true);
       const data = await fetchLeaderboard();
@@ -110,6 +114,10 @@ export default function LeaderboardPage() {
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:inline">Back to Hub</span>
             </Link>
+            <span className="text-slate-700 hidden md:inline">/</span>
+            <span className="text-xs font-bold text-white hidden md:inline">
+              PyVerse <span className="text-python-yellow">Academy</span>
+            </span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -126,10 +134,10 @@ export default function LeaderboardPage() {
               <span>Competitive Leaderboard</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Global Python League
+              PyVerse Academy Leaderboard
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
-              Real-time rankings of learners mastering Python with Osama Elzero. Earn XP by beating mini-games and mini-projects.
+              Real-time rankings of learners mastering Osama Elzero&apos;s Python course on PyVerse Academy. Earn XP by beating mini-games and mini-projects.
             </p>
           </div>
 

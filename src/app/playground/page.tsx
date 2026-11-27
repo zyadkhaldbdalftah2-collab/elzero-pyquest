@@ -22,13 +22,14 @@ const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
 });
 
 const DEFAULT_CODE = `# ==========================================
-# Elzero PyQuest – Python Studio
+# PyVerse Academy – Python Studio
+# Osama Elzero's Mastering Python IDE
 # Real Python 3.12 Execution (Pyodide Wasm)
 # ==========================================
 
 def greet_developer(name, track="Mastering Python"):
     print(f"\\n🐍 Hello, {name}!")
-    print(f"🚀 Welcome to Elzero PyQuest: {track}")
+    print(f"🚀 Welcome to PyVerse Academy: {track}")
 
 greet_developer("Osama Elzero Student")
 
@@ -192,6 +193,11 @@ function PlaygroundContent() {
     setResult(execResult);
     setIsRunning(false);
   }, [isRunning, activeFile, runCode]);
+
+  // Page title
+  useEffect(() => {
+    document.title = "Python Studio IDE | PyVerse Academy";
+  }, []);
 
   // Keyboard shortcut: Ctrl+Enter / Cmd+Enter to run code
   useEffect(() => {

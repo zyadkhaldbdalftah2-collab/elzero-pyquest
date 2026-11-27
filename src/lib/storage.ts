@@ -78,24 +78,6 @@ export function isGameCompleted(lessonId: number, gameName: string): boolean {
   return progress.completedGames[key]?.includes(gameName) ?? false;
 }
 
-// API Key storage
-const API_KEY_STORAGE = "elzero-pyquest-gemini-key";
-
-export function getApiKey(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(API_KEY_STORAGE);
-}
-
-export function setApiKey(key: string): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(API_KEY_STORAGE, key);
-}
-
-export function removeApiKey(): void {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(API_KEY_STORAGE);
-}
-
 // Generated lesson cache
 const LESSON_CACHE_PREFIX = "elzero-pyquest-lesson-";
 

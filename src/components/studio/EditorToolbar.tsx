@@ -68,12 +68,14 @@ export default function EditorToolbar({
             </div>
           </div>
           <div>
-            <div className="text-xs font-bold text-white flex items-center gap-1">
-              <span>Python</span>
-              <span className="text-python-yellow">Studio</span>
+            <div className="text-xs font-bold text-white flex items-center gap-1.5">
+              <span>PyVerse</span>
+              <span className="text-python-yellow">Academy</span>
+              <span className="text-slate-500 font-normal hidden sm:inline">|</span>
+              <span className="text-blue-300 hidden sm:inline">Python Studio</span>
             </div>
             <div className="text-[10px] text-slate-500 font-mono hidden md:block">
-              VS Code Web IDE & Pyodide
+              VS Code Web IDE & Pyodide • Osama Elzero Course
             </div>
           </div>
         </div>

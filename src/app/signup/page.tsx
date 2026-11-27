@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -26,6 +26,10 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.title = "Sign Up | PyVerse Academy";
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,15 +74,15 @@ export default function SignUpPage() {
               </div>
             </div>
             <div className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
-              <span>Elzero</span>
-              <span className="text-python-yellow font-extrabold">PyQuest</span>
+              <span>PyVerse</span>
+              <span className="text-python-yellow font-extrabold">Academy</span>
             </div>
           </Link>
           <h1 className="text-2xl font-bold text-white tracking-tight">
             Create your developer profile
           </h1>
           <p className="text-xs text-slate-400">
-            Join the Python leaderboard & showcase your earned certificates
+            Master Osama Elzero&apos;s Python course, join the leaderboard &amp; earn certificates
           </p>
         </div>
 

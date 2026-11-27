@@ -1,23 +1,20 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  Key,
   Sparkles,
   CheckCircle2,
   AlertCircle,
   Loader2,
   Gamepad2,
-  Layers,
-  ArrowLeft,
-  ArrowRight,
-  ExternalLink,
   Terminal,
+  BookOpen,
+  Cpu,
 } from "lucide-react";
 
 import Sidebar from "@/components/Sidebar";
@@ -28,7 +25,6 @@ import MethodsCheatSheet from "@/components/MethodsCheatSheet";
 import CommonPitfalls from "@/components/CommonPitfalls";
 import GamificationBar from "@/components/GamificationBar";
 import EssayPrep from "@/components/EssayPrep";
-import ApiKeyModal from "@/components/ApiKeyModal";
 
 // 10 Mini-Games
 import FillInTheBlanks from "@/components/games/FillInTheBlanks";
@@ -45,21 +41,15 @@ import MiniProjectChallenge from "@/components/games/MiniProjectChallenge";
 import { getLesson } from "@/data/lessons";
 import { allLessons } from "@/data/courseStructure";
 import { useGameState } from "@/hooks/useGameState";
-import {
-  getCachedLesson,
-  setCachedLesson,
-  getApiKey,
-} from "@/lib/storage";
+import { getCachedLesson, setCachedLesson } from "@/lib/storage";
 import { Lesson, XP_REWARDS } from "@/types";
 
 export default function LessonPage() {
   const params = useParams();
-  const router = useRouter();
   const rawId = params?.id as string;
   const lessonId = parseInt(rawId, 10) || 1;
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
   const [activeGameTab, setActiveGameTab] = useState<string>("fillInTheBlanks");
 
   // AI Generation states
@@ -79,7 +69,53 @@ export default function LessonPage() {
     return allLessons.find((l) => l.id === lessonId);
   }, [lessonId]);
 
-  // Load lesson data (static -> cache -> null)
+  useEffect(() => {
+    const title = lesson?.titleEn || lessonStub?.titleEn || `Lesson #${lessonId}`;
+    document.title = `Lesson #${String(lessonId).padStart(3, "0")} – ${title} | PyVerse Academy`;
+  }, [lessonId, lesson, lessonStub]);
+
+  // Trigger server-side AI generation (no user API key needed)
+  const handleGenerateWithAI = useCallback(
+    async (signal?: AbortSignal) => {
+      if (!lessonStub) return;
+
+      setIsGenerating(true);
+      setGenerationError(null);
+
+      try {
+        const res = await fetch("/api/generate-lesson", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lessonId }),
+          signal,
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to generate lesson content");
+        }
+
+        if (!signal?.aborted) {
+          setLesson(data.lesson);
+          setCachedLesson(lessonId, JSON.stringify(data.lesson));
+        }
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === "AbortError") {
+          return;
+        }
+        const message =
+          err instanceof Error ? err.message : "Failed to generate lesson content.";
+        setGenerationError(message);
+      } finally {
+        if (!signal?.aborted) {
+          setIsGenerating(false);
+        }
+      }
+    },
+    [lessonId, lessonStub]
+  );
+
+  // Load lesson data (static -> localStorage cache -> auto-generate)
   useEffect(() => {
     setIsLoaded(false);
     setGenerationError(null);
@@ -88,6 +124,7 @@ export default function LessonPage() {
     const staticData = getLesson(lessonId);
     if (staticData) {
       setLesson(staticData);
+      setIsGenerating(false);
       setIsLoaded(true);
       return;
     }
@@ -98,6 +135,7 @@ export default function LessonPage() {
       try {
         const parsed = JSON.parse(cached);
         setLesson(parsed);
+        setIsGenerating(false);
         setIsLoaded(true);
         return;
       } catch (e) {
@@ -105,42 +143,19 @@ export default function LessonPage() {
       }
     }
 
-    // No content yet
+    // 3. Not cached yet -> automatically generate via server API
     setLesson(null);
     setIsLoaded(true);
-  }, [lessonId]);
 
-  // Trigger AI generation
-  const handleGenerateWithAI = async () => {
-    const key = getApiKey();
-    if (!key) {
-      setApiKeyModalOpen(true);
-      return;
-    }
+    if (!lessonStub) return;
 
-    setIsGenerating(true);
-    setGenerationError(null);
+    const controller = new AbortController();
+    void handleGenerateWithAI(controller.signal);
 
-    try {
-      const res = await fetch("/api/generate-lesson", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lessonId, apiKey: key }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to generate lesson content");
-      }
-
-      setLesson(data.lesson);
-      setCachedLesson(lessonId, JSON.stringify(data.lesson));
-    } catch (err: any) {
-      setGenerationError(err.message || "Failed to generate lesson content.");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+    return () => {
+      controller.abort();
+    };
+  }, [lessonId, lessonStub, handleGenerateWithAI]);
 
   const handleGameComplete = (gameName: string) => {
     const reward = XP_REWARDS[gameName] || 10;
@@ -199,6 +214,9 @@ export default function LessonPage() {
                   {lesson?.titleEn || lessonStub?.titleEn || `Lesson #${lessonId}`}
                 </h1>
               </div>
+              <p className="text-[10px] font-mono text-slate-400 hidden sm:block">
+                PyVerse Academy • Osama Elzero&apos;s Mastering Python
+              </p>
             </div>
           </div>
 
@@ -212,15 +230,6 @@ export default function LessonPage() {
               <Terminal className="w-3.5 h-3.5 text-python-yellow" />
               <span>Studio</span>
             </Link>
-
-            <button
-              onClick={() => setApiKeyModalOpen(true)}
-              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-colors"
-              title="Configure Gemini API Key"
-            >
-              <Key className="w-3.5 h-3.5 text-python-yellow" />
-              <span>Gemini AI</span>
-            </button>
 
             <button
               onClick={handleToggleLessonComplete}
@@ -295,59 +304,93 @@ export default function LessonPage() {
             </div>
           )}
 
-          {/* AI Generation State when lesson data doesn't exist */}
+          {/* Seamless Server-Side AI Generation State when lesson isn't cached yet */}
           {isLoaded && !lesson && (
-            <div className="p-8 sm:p-12 rounded-3xl bg-slate-900 border border-slate-800 text-center space-y-6 max-w-2xl mx-auto shadow-2xl">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-python-blue to-python-yellow p-0.5 mx-auto">
-                <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                  <Sparkles className="w-8 h-8 text-python-yellow animate-pulse" />
-                </div>
-              </div>
+            <div className="p-8 sm:p-12 rounded-3xl bg-slate-900 border border-slate-800 text-center space-y-6 max-w-2xl mx-auto shadow-2xl relative overflow-hidden">
+              <div className="absolute -top-24 -right-24 w-64 h-64 bg-python-blue/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-python-yellow/10 rounded-full blur-3xl pointer-events-none" />
 
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-white">
-                  Generate Lesson #{lessonId} with Gemini AI
-                </h2>
-                <p className="text-xs text-slate-400 leading-relaxed max-w-md mx-auto">
-                  Lessons #001 through #005 are pre-loaded out of the box. Lessons #006 through #152 can be generated on-demand with rich Arabic references, 10 English mini-games, and exam essay questions.
-                </p>
-              </div>
-
-              {generationError && (
-                <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-900/50 text-xs text-red-300 flex items-start gap-2 text-left">
-                  <AlertCircle className="w-4 h-4 shrink-0 text-red-400 mt-0.5" />
-                  <div>
-                    <span className="font-bold">Error:</span> {generationError}
+              <div className="relative z-10 space-y-6">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-python-blue to-python-yellow p-0.5 mx-auto shadow-lg shadow-python-blue/20">
+                  <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                    {isGenerating ? (
+                      <Cpu className="w-8 h-8 text-python-yellow animate-spin" />
+                    ) : (
+                      <Sparkles className="w-8 h-8 text-python-yellow animate-pulse" />
+                    )}
                   </div>
                 </div>
-              )}
 
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-                <button
-                  onClick={handleGenerateWithAI}
-                  disabled={isGenerating}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-python-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 text-white font-bold text-xs shadow-lg shadow-python-blue/20 transition-all active:scale-95"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Generating with Gemini 2.0...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 text-python-yellow" />
-                      <span>Generate Full Lesson (+10 Games)</span>
-                    </>
-                  )}
-                </button>
+                {isGenerating ? (
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-python-blue/15 text-blue-300 border border-python-blue/30">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>PyVerse Academy AI Engine</span>
+                      </span>
+                      <h2 className="text-xl font-bold text-white">
+                        Preparing Interactive Lesson #{String(lessonId).padStart(3, "0")}...
+                      </h2>
+                      <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                        {lessonStub?.titleEn} — building your Arabic reference guide, method cheat sheet, and 10 interactive Python mini-games. Cached automatically for instant future visits.
+                      </p>
+                    </div>
 
-                <button
-                  onClick={() => setApiKeyModalOpen(true)}
-                  className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-300 transition-colors"
-                >
-                  <Key className="w-3.5 h-3.5 text-python-yellow" />
-                  <span>Configure API Key</span>
-                </button>
+                    {/* Sleek animated loading progress steps */}
+                    <div className="max-w-sm mx-auto space-y-2 text-left bg-slate-950/70 border border-slate-800 rounded-2xl p-4">
+                      <div className="flex items-center gap-2.5 text-xs text-slate-300">
+                        <BookOpen className="w-4 h-4 text-python-blue animate-pulse shrink-0" />
+                        <span className="flex-1">Compiling Arabic summary &amp; cheat sheet</span>
+                        <span className="w-2 h-2 rounded-full bg-python-blue animate-ping" />
+                      </div>
+                      <div className="flex items-center gap-2.5 text-xs text-slate-300">
+                        <Gamepad2 className="w-4 h-4 text-python-yellow animate-pulse shrink-0" />
+                        <span className="flex-1">Generating 10 Python coding challenges</span>
+                        <span className="w-2 h-2 rounded-full bg-python-yellow animate-ping" />
+                      </div>
+                      <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden mt-2">
+                        <div className="h-full w-2/3 bg-gradient-to-r from-python-blue via-sky-400 to-python-yellow rounded-full animate-pulse" />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <h2 className="text-xl font-bold text-white">
+                        {lessonStub
+                          ? `Interactive Lesson #${String(lessonId).padStart(3, "0")}`
+                          : `Lesson #${lessonId} Not Found`}
+                      </h2>
+                      <p className="text-xs text-slate-400 leading-relaxed max-w-md mx-auto">
+                        {lessonStub
+                          ? `${lessonStub.titleEn} — load the complete Arabic reference hub, 10 interactive English mini-games, and exam prep questions.`
+                          : "This lesson number is outside the 152-lesson Mastering Python curriculum."}
+                      </p>
+                    </div>
+
+                    {generationError && (
+                      <div className="p-3.5 rounded-xl bg-red-950/40 border border-red-900/50 text-xs text-red-300 flex items-start gap-2 text-left">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-red-400 mt-0.5" />
+                        <div>
+                          <span className="font-bold">Error:</span> {generationError}
+                        </div>
+                      </div>
+                    )}
+
+                    {lessonStub && (
+                      <div className="flex justify-center pt-1">
+                        <button
+                          onClick={() => void handleGenerateWithAI()}
+                          disabled={isGenerating}
+                          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-python-blue to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 text-white font-bold text-xs shadow-lg shadow-python-blue/20 transition-all active:scale-95"
+                        >
+                          <Sparkles className="w-4 h-4 text-python-yellow" />
+                          <span>Load Interactive Lesson</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -515,17 +558,6 @@ export default function LessonPage() {
           )}
         </div>
       </div>
-
-      {/* API Key Modal */}
-      <ApiKeyModal
-        isOpen={apiKeyModalOpen}
-        onClose={() => setApiKeyModalOpen(false)}
-        onKeySaved={() => {
-          if (!lesson) {
-            handleGenerateWithAI();
-          }
-        }}
-      />
     </div>
   );
 }

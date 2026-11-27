@@ -89,10 +89,10 @@ export default function Sidebar({
             </div>
             <div>
               <div className="text-base font-bold tracking-tight text-white flex items-center gap-1.5">
-                <span>Elzero</span>
-                <span className="text-python-yellow font-extrabold">PyQuest</span>
+                <span>PyVerse</span>
+                <span className="text-python-yellow font-extrabold">Academy</span>
               </div>
-              <p className="text-[10px] text-slate-400 font-mono">152 Master Lessons</p>
+              <p className="text-[10px] text-slate-400 font-mono">Osama Elzero • 152 Lessons</p>
             </div>
           </Link>
           {onCloseMobile && (

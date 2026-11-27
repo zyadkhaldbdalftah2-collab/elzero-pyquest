@@ -36,6 +36,12 @@ export default function ProfilePage() {
   const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
+    document.title = username
+      ? `@${username} Profile | PyVerse Academy`
+      : "Developer Profile | PyVerse Academy";
+  }, [username]);
+
+  useEffect(() => {
     async function loadData() {
       setLoading(true);
 
@@ -121,6 +127,10 @@ export default function ProfilePage() {
               <ArrowLeft className="w-4 h-4" />
               <span className="hidden sm:inline">Back to Hub</span>
             </Link>
+            <span className="text-slate-700 hidden md:inline">/</span>
+            <span className="text-xs font-bold text-white hidden md:inline">
+              PyVerse <span className="text-python-yellow">Academy</span>
+            </span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -185,7 +195,7 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-center sm:justify-start gap-4 text-xs font-mono text-slate-500 pt-2">
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" />
-                    <span>Python Master Track</span>
+                    <span>PyVerse Academy • Osama Elzero Mastering Python Track</span>
                   </span>
                   <span>•</span>
                   <span>Verified Learner</span>

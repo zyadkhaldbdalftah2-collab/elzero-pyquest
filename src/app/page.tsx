@@ -63,7 +63,8 @@ export default function HomePage() {
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-python-yellow animate-pulse" />
               <span className="text-xs font-mono text-slate-400">
-                Osama Elzero Python Playlist (152 Lessons)
+                <strong className="text-slate-200 font-semibold">PyVerse Academy</strong>
+                <span className="hidden sm:inline"> • Osama Elzero Mastering Python (152 Lessons)</span>
               </span>
             </div>
           </div>
@@ -121,9 +122,9 @@ export default function HomePage() {
 
               <div className="space-y-3">
                 <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white">
-                  Elzero{" "}
+                  PyVerse{" "}
                   <span className="bg-gradient-to-r from-python-blue via-sky-400 to-python-yellow bg-clip-text text-transparent">
-                    PyQuest
+                    Academy
                   </span>
                 </h1>
                 <p className="text-sm sm:text-base text-slate-400 max-w-2xl leading-relaxed">

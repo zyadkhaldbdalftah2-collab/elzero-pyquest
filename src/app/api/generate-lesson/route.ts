@@ -6,7 +6,7 @@ import { Lesson } from "@/types";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { lessonId, apiKey } = body;
+    const { lessonId } = body;
 
     if (!lessonId || typeof lessonId !== "number") {
       return NextResponse.json(
@@ -15,10 +15,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!apiKey || typeof apiKey !== "string") {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
       return NextResponse.json(
-        { error: "Missing Gemini API key. Please provide your API key." },
-        { status: 401 }
+        { error: "Server AI generation is currently unavailable (GEMINI_API_KEY not configured)." },
+        { status: 500 }
       );
     }
 
@@ -152,6 +153,9 @@ STRICT REQUIREMENTS:
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash",
       contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      },
     });
 
     const responseText = response.text || "";

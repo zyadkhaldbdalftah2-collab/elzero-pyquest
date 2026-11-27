@@ -3,9 +3,12 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
-  title: "Elzero PyQuest – Master Python with Osama Elzero",
+  title: {
+    default: "PyVerse Academy – Master Python with Osama Elzero",
+    template: "%s | PyVerse Academy",
+  },
   description:
-    "An interactive bilingual learning platform for Osama Elzero's Mastering Python course. 152 lessons, 10 mini-games per lesson, gamification, and AI-powered content.",
+    "PyVerse Academy is an interactive bilingual learning platform for Osama Elzero's Mastering Python course. 152 lessons, 10 mini-games per lesson, gamification, Python Studio IDE, and AI-powered content.",
 };
 
 export default function RootLayout({
